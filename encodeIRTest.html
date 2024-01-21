@@ -2,7 +2,7 @@
 <html lang="en">
  <head>
    <style>
-    
+
      body { margin: auto;  position: relative;}
      svg {
        display:block; position:relative;
@@ -45,13 +45,14 @@
       // Fetch and parse CSV data
       const csvData = await loadCSVFile();
       const csvRows = csvData.split('\n').slice(1); // Exclude header
-
+      console.log(csvContent)
       for (const row of csvRows) {
         const [functionName, protocol, n1, n2, n3] = row.split(',');
         if (protocol === selectedProtocol) {
           const button = document.createElement('button');
           button.className = 'function-btn';
           button.textContent = functionName;
+          
           button.addEventListener('click', async function () {
             let result = await encode(protocol, parseInt(n1), parseInt(n2), parseInt(n3));
             console.log(result);
@@ -99,11 +100,11 @@
         let index = protocolNamesLower.indexOf(protocol);
         return EncodeIR(protocolNames[index], n1, n2, n3);
       }
-  
-      async function run() {
-        let result = await encode("MCE", 4, 15, 0);
-        console.log(result);
-      }
+  //last changed
+      //async function run() {
+       // let result = await encode("MCE", 4, 15, 0);
+       // console.log(result);
+     // }
       run();
   </script>
   
