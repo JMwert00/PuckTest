@@ -1,35 +1,112 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+   <style>
+    
+     body { margin: auto;  position: relative;}
+     svg {
+       display:block; position:relative;
+       top:0%; left:0%; width:25%; height:25%;
+       align-self: right;
+       cursor: pointer;
 
-<head>
-</head>
-
-<body>
-  <!--script type="module" src="EncodeIR.js"></script-->
+     }
+     toggle {
+  width:100%;
+       
+     }
+   </style>    
+ </head>
+ <body>
+  <svg viewBox="0 0 24 24">
+    <path fill="#000000" d="M12,2A7,7 0 0,0 5,9C5,11.38 6.19,13.47 8,14.74V17A1,1 0 0,0 9,18H15A1,1 0 0,0 16,17V14.74C17.81,13.47 19,11.38 19,9A7,7 0 0,0 12,2M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21Z" />
+  </svg>
+  <div id="toggle-container">
+    <select id="toggle" onchange="populateFunctions()">
+      <option>...</option>
+      <option>benq</option>
+      <!-- Add other protocol options here -->
+    </select>
+  </div>
+  <div id="function-options"></div>
+  <script src="https://www.puck-js.com/puck.js"></script>
   <script type="module">
-    import { EncodeIR } from "./EncodeIR.js";
-
-    let protocolNames = ["DAC4", "Dell", "Denon-K", "Dgtec", "DishPlayer_Network", "Dreambox", "Furby", "GI4dtv", "GI_cable", "Jerrold", "Kaseikyo", "Kramer", "Mitsubishi", "NECx1", "NECx2", "Nokia32", "Nokia32single", "Polycom", "Proton", "Samsung20", "Samsung36", "TViX", "Teac-K", "Thomson", "Tivo-Nec1", "XMP", "aiwa", "async", "blaupunkt", "denon", "emerson", "f12", "fujitsu", "iPod", "imonpc", "jvc", "jvc_two_frames", "lumagen", "mce", "nec1", "nec2", "panasonic", "panasonic2", "pioneer", "pioneer2", "rc5", "rc5odd", "rc5x", "rc6-M-L", "rc6", "rca", "recs80_45", "recs80_68", "russound", "sagem", "sharp", "streamzap", "x10ir"];
-    let protocolNamesLower = protocolNames.map(name => name.toLocaleLowerCase());
-    console.log(JSON.stringify(protocolNames))
-    //let protocolNamesLower = protocolNames.map()
-
-
-    async function encode(protocol, n1, n2, n3) {
-      //let result = await EncodeIR("mce", 4, 15, 0); //Groß Klein BEACHTEN
-      protocol = protocol.toLocaleLowerCase();
-      let index = protocolNamesLower.indexOf(protocol);
-      return EncodeIR(protocolNames[index], n1, n2, n3);
+     async function loadCSVFile() {
+      const response = await fetch('48,-1'); // Replace 'your-csv-file.csv' with the actual filename
+      const csvData = await response.text();
+      return csvData;
     }
+    async function populateFunctions() {
+      const selectedProtocol = document.getElementById('toggle').value;
+      const functionOptions = document.getElementById('function-options');
 
-    async function run() {
-      let result = await encode("MCE", 4, 15, 0);
-      console.log(result);
+      // Clear previous options
+      functionOptions.innerHTML = '';
+      // Fetch and parse CSV data
+      const csvData = await loadCSVFile();
+      const csvRows = csvData.split('\n').slice(1); // Exclude header
+
+      for (const row of csvRows) {
+        const [functionName, protocol, n1, n2, n3] = row.split(',');
+        if (protocol === selectedProtocol) {
+          const button = document.createElement('button');
+          button.className = 'function-btn';
+          button.textContent = functionName;
+          button.addEventListener('click', async function () {
+            let result = await encode(protocol, parseInt(n1), parseInt(n2), parseInt(n3));
+            console.log(result);
+          });
+          functionOptions.appendChild(button);
+        }
+      }
     }
-    run();
-
-
-
+    // Get the actual curve inside the SVG. You could make differemt
+    // parts of a more complex SVG do different things...
+    var path = document.getElementsByTagName('path')[0];
+    // Make sure your mouse cursor turns into a hand when over it, and gray it out
+    path.style="cursor:pointer;fill:#BBB";
+    // the possible states we could be in
+    var state = 0;
+    var states = [
+      { color : "#444", command : "digitalWrite([LED3,LED2,LED1],0);\n" },
+      { color : "green", command : "digitalWrite([LED3,LED2,LED1],2);\n" }, 
+    ];
+    // Now send commands to turn the LED on or off
+    path.addEventListener("click", function() {
+      state++;
+      if (state>=states.length)
+        state=0;
+      path.style.fill=states[state].color;
+      Puck.write(states[state].command);
+    });
+    
   </script>
+    <select id="toggle"><option>...</option><option><protocolNames>benq</protocolNames></option><option><protocolNames>benq</protocolNames></option><option><protocolNames>benq</protocolNames></option></select>
+  
+    <!--script type="module" src="EncodeIR.js"></script-->
+    <script type="module">
+      import { EncodeIR } from "./EncodeIR.js";
+  
+      let protocolNames = ["DAC4", "Dell", "Denon-K", "Dgtec", "DishPlayer_Network", "Dreambox", "Furby", "GI4dtv", "GI_cable", "Jerrold", "Kaseikyo", "Kramer", "Mitsubishi", "NECx1", "NECx2", "Nokia32", "Nokia32single", "Polycom", "Proton", "Samsung20", "Samsung36", "TViX", "Teac-K", "Thomson", "Tivo-Nec1", "XMP", "aiwa", "async", "blaupunkt", "denon", "emerson", "f12", "fujitsu", "iPod", "imonpc", "jvc", "jvc_two_frames", "lumagen", "mce", "nec1", "nec2", "panasonic", "panasonic2", "pioneer", "pioneer2", "rc5", "rc5odd", "rc5x", "rc6-M-L", "rc6", "rca", "recs80_45", "recs80_68", "russound", "sagem", "sharp", "streamzap", "x10ir"];
+      let protocolNamesLower = protocolNames.map(name => name.toLocaleLowerCase());
+      console.log(JSON.stringify(protocolNames))
+      //let protocolNamesLower = protocolNames.map()
+  
+  
+      async function encode(protocol, n1, n2, n3) {
+        //let result = await EncodeIR("mce", 4, 15, 0); //Groß Klein BEACHTEN
+        protocol = protocol.toLocaleLowerCase();
+        let index = protocolNamesLower.indexOf(protocol);
+        return EncodeIR(protocolNames[index], n1, n2, n3);
+      }
+  
+      async function run() {
+        let result = await encode("MCE", 4, 15, 0);
+        console.log(result);
+      }
+      run();
+  </script>
+  
+  
 </body>
-
 </html>
