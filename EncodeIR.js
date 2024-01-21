@@ -1,3 +1,4 @@
+//protocols: https://github.com/probonopd/MakeHex/blob/master/EncodeIR.cpp
 
 let onRuntimeInitialized;
 const ready = new Promise(resolve => onRuntimeInitialized = resolve)
