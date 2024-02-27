@@ -39,7 +39,7 @@
     <input type="number" id="n1Input" placeholder="n1">
     <input type="number" id="n2Input" placeholder="n2">
     <input type="number" id="n3Input" placeholder="n3">
-    <button onclick="submitData()">Submit</button>
+    <button id="submitButton">Submit</button>
   </div>
 
   <!-- Update the function-options div to contain buttons -->
@@ -49,7 +49,7 @@
     <span class="output"></span>
   </p>
 
-  <iframe src="https://benjaminbenben.com/puckmote/" width="100%" height="300"></iframe>
+  <iframe src="https://benjaminbenben.com/puckmote/" allow="bluethooth" width="100%", height="300"></iframe>
 
   <script src="https://www.puck-js.com/puck.js"></script>
   <script type="module">
@@ -70,9 +70,9 @@
       console.log(result);
     }
 
-    function getOption() {
-      let selectElement = document.querySelector('#select1');
-      let output = selectElement.value;
+    function getOption(output) {
+      selectElement = document.querySelector('#select1');
+      output = selectElement.value;
       document.querySelector('.output').textContent = output;
       console.log(output);
       return output;
@@ -86,7 +86,8 @@
 
       await encode(protocol, n1, n2, n3);
     }
-
+    var submitButton = document.getElementById('submitButton');
+    submitButton.addEventListener('click', submitData);
     var result2 = getOption();
     console.log(result2);
 
