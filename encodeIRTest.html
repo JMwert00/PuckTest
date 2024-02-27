@@ -1,113 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
- <head>
-   <style>
+<head>
+  <style>
+    body {
+      margin: auto;
+      position: relative;
+    }
 
-     body { margin: auto;  position: relative;}
-     svg {
-       display:block; position:relative;
-       top:0%; left:0%; width:25%; height:25%;
-       align-self: right;
-       cursor: pointer;
+    svg {
+      display: block;
+      position: relative;
+      top: 0%;
+      left: 0%;
+      width: 25%;
+      height: 25%;
+      align-self: right;
+      cursor: pointer;
+      z-index: 1; /* Ensure the SVG is above other elements */
+    }
 
-     }
-     toggle {
-  width:100%;
-       
-     }
-   </style>    
- </head>
- <body>
+    iframe {
+      position: relative; /* Ensure iframe position is relative */
+      z-index: 0; /* Lower z-index to ensure it's below other elements */
+    }
+
+    .toggle {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
   <svg viewBox="0 0 24 24">
     <path fill="#000000" d="M12,2A7,7 0 0,0 5,9C5,11.38 6.19,13.47 8,14.74V17A1,1 0 0,0 9,18H15A1,1 0 0,0 16,17V14.74C17.81,13.47 19,11.38 19,9A7,7 0 0,0 12,2M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21Z" />
   </svg>
+
   <div id="toggle-container">
-    <select id="toggle" onchange="populateFunctions()">
-      <option>...</option>
-      <option>benq</option>
-      <!-- Add other protocol options here -->
-    </select>
+    <input type="text" id="protocolInput" placeholder="Protocol">
+    <input type="number" id="n1Input" placeholder="n1">
+    <input type="number" id="n2Input" placeholder="n2">
+    <input type="number" id="n3Input" placeholder="n3">
+    <button onclick="submitData()">Submit</button>
   </div>
+
+  <!-- Update the function-options div to contain buttons -->
   <div id="function-options"></div>
+
+  <p>The value of the option selected is:
+    <span class="output"></span>
+  </p>
+
+  <iframe src="https://benjaminbenben.com/puckmote/" width="100%", height="300"></iframe>
+
   <script src="https://www.puck-js.com/puck.js"></script>
   <script type="module">
-     async function loadCSVFile() {
-      const response = await fetch('48,-1'); // Replace 'your-csv-file.csv' with the actual filename
-      const csvData = await response.text();
-      return csvData;
-    }
-    async function populateFunctions() {
-      const selectedProtocol = document.getElementById('toggle').value;
-      const functionOptions = document.getElementById('function-options');
+    import { EncodeIR } from "./EncodeIR.js";
 
-      // Clear previous options
-      functionOptions.innerHTML = '';
-      // Fetch and parse CSV data
-      const csvData = await loadCSVFile();
-      const csvRows = csvData.split('\n').slice(1); // Exclude header
-      console.log(csvContent)
-      for (const row of csvRows) {
-        const [functionName, protocol, n1, n2, n3] = row.split(',');
-        if (protocol === selectedProtocol) {
-          const button = document.createElement('button');
-          button.className = 'function-btn';
-          button.textContent = functionName;
-          
-          button.addEventListener('click', async function () {
-            let result = await encode(protocol, parseInt(n1), parseInt(n2), parseInt(n3));
-            console.log(result);
-          });
-          functionOptions.appendChild(button);
-        }
-      }
+    let protocolNames = ["DAC4", "Dell", "Denon-K", "Dgtec", "DishPlayer_Network", "Dreambox", "Furby", "GI4dtv", "GI_cable", "Jerrold", "Kaseikyo", "Kramer", "Mitsubishi", "NECx1", "NECx2", "Nokia32", "Nokia32single", "Polycom", "Proton", "Samsung20", "Samsung36", "TViX", "Teac-K", "Thomson", "Tivo-Nec1", "XMP", "aiwa", "async", "blaupunkt", "denon", "emerson", "f12", "fujitsu", "iPod", "imonpc", "jvc", "jvc_two_frames", "lumagen", "mce", "nec1", "nec2", "panasonic", "panasonic2", "pioneer", "pioneer2", "rc5", "rc5odd", "rc5x", "rc6-M-L", "rc6", "rca", "recs80_45", "recs80_68", "russound", "sagem", "sharp", "streamzap", "x10ir"];
+    let protocolNamesLower = protocolNames.map(name => name.toLocaleLowerCase());
+
+    async function encode(protocol, n1, n2, n3) {
+      protocol = protocol.toLocaleLowerCase();
+      let index = protocolNamesLower.indexOf(protocol);
+      return EncodeIR(protocolNames[index], n1, n2, n3);
     }
-    // Get the actual curve inside the SVG. You could make differemt
-    // parts of a more complex SVG do different things...
-    var path = document.getElementsByTagName('path')[0];
-    // Make sure your mouse cursor turns into a hand when over it, and gray it out
-    path.style="cursor:pointer;fill:#BBB";
-    // the possible states we could be in
-    var state = 0;
-    var states = [
-      { color : "#444", command : "digitalWrite([LED3,LED2,LED1],0);\n" },
-      { color : "green", command : "digitalWrite([LED3,LED2,LED1],2);\n" }, 
-    ];
-    // Now send commands to turn the LED on or off
-    path.addEventListener("click", function() {
-      state++;
-      if (state>=states.length)
-        state=0;
-      path.style.fill=states[state].color;
-      Puck.write(states[state].command);
-    });
-    
-  </script>
-    <select id="toggle"><option>...</option><option><protocolNames>benq</protocolNames></option><option><protocolNames>benq</protocolNames></option><option><protocolNames>benq</protocolNames></option></select>
-  
-    <!--script type="module" src="EncodeIR.js"></script-->
-    <script type="module">
-      import { EncodeIR } from "./EncodeIR.js";
-  
-      let protocolNames = ["DAC4", "Dell", "Denon-K", "Dgtec", "DishPlayer_Network", "Dreambox", "Furby", "GI4dtv", "GI_cable", "Jerrold", "Kaseikyo", "Kramer", "Mitsubishi", "NECx1", "NECx2", "Nokia32", "Nokia32single", "Polycom", "Proton", "Samsung20", "Samsung36", "TViX", "Teac-K", "Thomson", "Tivo-Nec1", "XMP", "aiwa", "async", "blaupunkt", "denon", "emerson", "f12", "fujitsu", "iPod", "imonpc", "jvc", "jvc_two_frames", "lumagen", "mce", "nec1", "nec2", "panasonic", "panasonic2", "pioneer", "pioneer2", "rc5", "rc5odd", "rc5x", "rc6-M-L", "rc6", "rca", "recs80_45", "recs80_68", "russound", "sagem", "sharp", "streamzap", "x10ir"];
-      let protocolNamesLower = protocolNames.map(name => name.toLocaleLowerCase());
-      console.log(JSON.stringify(protocolNames))
-      //let protocolNamesLower = protocolNames.map()
-  
-  
-      async function encode(protocol, n1, n2, n3) {
-        //let result = await EncodeIR("mce", 4, 15, 0); //Groß Klein BEACHTEN
-        protocol = protocol.toLocaleLowerCase();
-        let index = protocolNamesLower.indexOf(protocol);
-        return EncodeIR(protocolNames[index], n1, n2, n3);
+
+    // Funktion run() definieren
+    async function run() {
+      let result = await encode("NEC", 64, -1, 127);
+      console.log(result);
+    }
+
+    function getOption(output) {
+      selectElement = document.querySelector('#select1');
+      output = selectElement.value;
+      document.querySelector('.output').textContent = output;
+      console.log(output);
+      return output;
+    }
+
+    async function submitData() {
+      const protocol = document.getElementById('protocolInput').value;
+      const n1 = parseInt(document.getElementById('n1Input').value);
+      const n2 = parseInt(document.getElementById('n2Input').value);
+      const n3 = parseInt(document.getElementById('n3Input').value);
+
+      await encode(protocol, n1, n2, n3);
+    }
+
+    var result2 = getOption();
+    console.log(result2);
+
+    path.addEventListener("click", function () {
+      var currentValue = getOption();
+      if (currentValue === 'benq') {
+        run();
+        console.log(result2);
       }
-  //last changed
-      //async function run() {
-       // let result = await encode("MCE", 4, 15, 0);
-       // console.log(result);
-     // }
-      run();
+    });
   </script>
-  
-  
 </body>
 </html>
