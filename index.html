@@ -79,7 +79,7 @@
     }
 
     async function submitData() {
-      const protocol = document.getElementById('protocolInput').value;
+      const protocol = String(document.getElementById('protocolInput').value);
       const n1 = parseInt(document.getElementById('n1Input').value);
       const n2 = parseInt(document.getElementById('n2Input').value);
       const n3 = parseInt(document.getElementById('n3Input').value);
