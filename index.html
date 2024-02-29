@@ -40,6 +40,7 @@
     <input type="number" id="n2Input" placeholder="n2">
     <input type="number" id="n3Input" placeholder="n3">
     <button id="submitButton">Submit</button>
+     <button id="Discon">Disconnect</button>
   </div>
 
   <!-- Update the function-options div to contain buttons -->
@@ -90,7 +91,12 @@
     submitButton.addEventListener('click', submitData);
     var result2 = getOption();
     console.log(result2);
-
+          async function disconnect(){
+        gatt.disconnect();
+        console.log("Disonnected");
+     }
+     const choice = document.getElementById("Discon");
+      choice.addEventListener("Discon", disconnect());
     path.addEventListener("click", function () {
       var currentValue = getOption();
       if (currentValue === 'benq') {
