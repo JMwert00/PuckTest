@@ -1,0 +1,49 @@
+/* Basic Styling */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  button {
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  input,
+  textarea {
+    width: 80%;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 16px;
+  }
+  
+  textarea {
+    height: 150px;
+    resize: both;
+  }
+  
+  .note {
+    margin: 10px auto;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: left;
+  }
+  
+  .note h3 {
+    margin: 0;
+    font-size: 18px;
+  }
+  
+  .note p {
+    margin: 5px 0;
+  }
+  
+  .delete {
+    cursor: pointer;
+    color: red;
+    font-size: 14px;
+    margin-left: 10px;
+  }
