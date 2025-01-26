@@ -441,10 +441,10 @@ sa20b048
                 // Now, use the helper function to group the bytes into the DSF format
                 function decodeToDSF(decodedBytes) {
                     // Ensure the input array has the expected length (8 bytes for NEC protocol)
-                    if (decodedBytes.length !== 8) {
-                        console.error("Invalid number of decoded bytes. Expected 8 bytes.");
-                        return;
-                    }
+                   // if (decodedBytes.length !== 8) {
+                   //     console.error("Invalid number of decoded bytes. Expected 8 bytes.");
+                   //     return;
+                  //  }
 
                     // Function to reverse the bit order of a byte
                     function reverseBits(byte) {
