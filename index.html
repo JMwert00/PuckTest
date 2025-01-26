@@ -155,6 +155,42 @@ sa20b048
     //
     //EventListener mit Funktion
     document.getElementById("disconnect").addEventListener("click", disconnectFromPuck);
+    const popup = document.getElementById("popup");
+        const overlay = document.getElementById("overlay");
+        const saveNoteButton = document.getElementById("saveNote");
+        const confirmSaveButton = document.getElementById("confirmSave");
+        const cancelSaveButton = document.getElementById("cancelSave");
+
+        saveNoteButton.addEventListener("click", () => {
+            popup.style.display = "block";
+            overlay.style.display = "block";
+        });
+        confirmSaveButton.addEventListener("click", () => {
+            const color = document.getElementById("colorPicker").value;
+            const title = document.getElementById("titleInput").value.trim();
+            const content = document.getElementById("pulseTimes").value.trim();
+
+            if (!title || !content) {
+                alert("Please provide a title and pulse times.");
+                return;
+            }
+
+            notes.push({ color, title, text: content });
+            commands[title] = content.split("\n");
+
+            saveNotes();
+            renderNotes();
+
+            popup.style.display = "none";
+            overlay.style.display = "none";
+        });
+
+        cancelSaveButton.addEventListener("click", () => {
+            popup.style.display = "none";
+            overlay.style.display = "none";
+        });
+
+
     function handleNotifications(event) {
       const value = new TextDecoder().decode(event.target.value);
       console.log("Received data:", value);
