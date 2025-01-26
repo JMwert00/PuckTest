@@ -9,7 +9,7 @@ sa20b048
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title> IR-Fernbedienung</title>
+  <title>Universal-IR-Fernbedienung</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -31,7 +31,26 @@ sa20b048
     <label for="csv">&nbsp &nbsp Abspeichern als csv Datei</label>
     <button id="csv">Download as CSV</button>
   </div>
-
+   <!-- Popup for Saving Notes -->
+   <div class="overlay" id="overlay"></div>
+   <div id="popup">
+       <h2>Save as Note</h2>
+       <label for="colorPicker">Choose Color:</label>
+       <input type="color" id="colorPicker" value="#ffffff">
+       <br>
+       <label for="titleInput">Note Title:</label>
+       <input type="text" id="titleInput" placeholder="Enter note title">
+       <br><br>
+       <button id="confirmSave">Save</button>
+       <button id="cancelSave">Cancel</button>
+   </div>
+   <!-- Textarea for HEX und NEC Notation -->
+   <div id="hex" style="border: 1px solid #ccc; padding: 10px; min-height: 50px;">
+       <h2>Pulszeiten zu HEX</h2>
+       <br>
+       <p>Das umgewandelte Signal wird hier ausgegeben:</p>
+       <textarea id="hexOutput" placeholder="Converted HEX code will appear here..."></textarea>
+   </div>
   <div> <!--Empfang-->
     <p3 style="text-align:left">Empfangenes Signal zum Kopieren</p3>
     <textarea id="d-array" placeholder=""></textarea>
@@ -156,39 +175,40 @@ sa20b048
     //EventListener mit Funktion
     document.getElementById("disconnect").addEventListener("click", disconnectFromPuck);
     const popup = document.getElementById("popup");
-        const overlay = document.getElementById("overlay");
-        const saveNoteButton = document.getElementById("saveNote");
-        const confirmSaveButton = document.getElementById("confirmSave");
-        const cancelSaveButton = document.getElementById("cancelSave");
+    const overlay = document.getElementById("overlay");
+    const saveNoteButton = document.getElementById("saveNote");
+    const confirmSaveButton = document.getElementById("confirmSave");
+    const cancelSaveButton = document.getElementById("cancelSave");
 
-        saveNoteButton.addEventListener("click", () => {
-            popup.style.display = "block";
-            overlay.style.display = "block";
-        });
-        confirmSaveButton.addEventListener("click", () => {
-            const color = document.getElementById("colorPicker").value;
-            const title = document.getElementById("titleInput").value.trim();
-            const content = document.getElementById("pulseTimes").value.trim();
+    saveNoteButton.addEventListener("click", () => {
+      popup.style.display = "block";
+      overlay.style.display = "block";
+    });
 
-            if (!title || !content) {
-                alert("Please provide a title and pulse times.");
-                return;
-            }
+    confirmSaveButton.addEventListener("click", () => {
+      const color = document.getElementById("colorPicker").value;
+      const title = document.getElementById("titleInput").value.trim();
+      const content = document.getElementById("pulseTimes").value.trim();
 
-            notes.push({ color, title, text: content });
-            commands[title] = content.split("\n");
+      if (!title || !content) {
+        alert("Please provide a title and pulse times.");
+        return;
+      }
 
-            saveNotes();
-            renderNotes();
+      notes.push({ color, title, text: content });
+      commands[title] = content.split("\n");
 
-            popup.style.display = "none";
-            overlay.style.display = "none";
-        });
+      saveNotes();
+      renderNotes();
 
-        cancelSaveButton.addEventListener("click", () => {
-            popup.style.display = "none";
-            overlay.style.display = "none";
-        });
+      popup.style.display = "none";
+      overlay.style.display = "none";
+    });
+
+    cancelSaveButton.addEventListener("click", () => {
+      popup.style.display = "none";
+      overlay.style.display = "none";
+    });
 
 
     function handleNotifications(event) {
