@@ -54,12 +54,7 @@ sa20b048
     <textarea id="d-array" placeholder=""></textarea>
   </div>
   <!-- Textarea for HEX und NEC Notation -->
-  <div id="hex" style="border: 1px solid #ccc; padding: 10px; min-height: 50px;">
-    <h2>Pulszeiten zu HEX</h2>
-    <br>
-    <p>Das umgewandelte Signal wird hier ausgegeben:</p>
-    <textarea id="hexOutput" placeholder="Converted HEX code will appear here..."></textarea>
-  </div>
+
 
   <div id="csv">
     <h2> -- Vorschau CSV -- </h2>
@@ -97,9 +92,6 @@ sa20b048
       <textarea id="contentInput" placeholder="Pulszeiten"></textarea>
       <button onclick="addNote()">Speichern!</button>
     </div>
-
-    <div id="notesContainer"></div>
-  </div>
   <!--BT Verbindung -->
   <script>
     let puckDevice = null;
