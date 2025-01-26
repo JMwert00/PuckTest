@@ -23,7 +23,7 @@ sa20b048
 
   <div id="bt">
     <p1>v Hier erscheint ein empfangenes IR-Signal v </p1> <br>
-    <textarea id="pulseTimes" placeholder="Pulse times will appear here..."></textarea> <br>
+    <textarea id="d-array" placeholder=""></textarea>
     <label for="saveNote">IR Signal abspeichern:</label>
     <button id="saveNote" onclick="saveNotes()">Save as Note</button>
     <label for="makeHex">&nbsp &nbsp Umwandlung in HEX:</label>
@@ -51,7 +51,7 @@ sa20b048
    </div>
   <div> <!--Empfang-->
     <p3 style="text-align:left">Empfangenes Signal zum Kopieren</p3>
-    <textarea id="d-array" placeholder=""></textarea>
+    
   </div>
   <!-- Textarea for HEX und NEC Notation -->
 
@@ -389,7 +389,7 @@ sa20b048
     document.getElementById('makeHex').addEventListener('click', () => {
       // Input pulse times from the textarea
       const pulseTimes = document.getElementById('d-array').value.trim();
-
+        console.log(pulseTimes);
       if (!pulseTimes) {
         alert('Please enter pulse times!');
         return;
