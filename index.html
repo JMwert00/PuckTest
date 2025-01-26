@@ -51,11 +51,11 @@ sa20b048
     <textarea id="hexOutput" placeholder="Converted HEX code will appear here..."></textarea>
   </div>
   <div> <!--Empfang-->
-    <p3 style="text-align:left">Empfangenes Signal zum Kopieren</p3>
+    <p3 style="text-align:left">Signal zum Kopieren für Asterics Grid Puck Aktion</p3>
     <ul>
       <li id="Puck Befehl">
-
-      </li>
+        <input type="text" id="commandInput" placeholder="kopieren sie die Pulszeit hier hin">
+      </li> <button id="saveCommandBtn">Save Command</button>
     </ul>
   </div>
   <!-- Textarea for HEX und NEC Notation -->
@@ -206,34 +206,16 @@ sa20b048
 
       let previousValues = [];
       function handleNotifications(event) {
-        // Decode the received data
         const value = new TextDecoder().decode(event.target.value);
         console.log("Received data:", value);
 
-        // Check if the value already exists in previousValues to avoid duplication
-        if (!previousValues.includes(value.trim())) {
-          // Append the received value to the existing content of the textarea
-          const textarea = document.getElementById("d-array");
-          textarea.value += value.trim() + "\n"; // Add a newline for separation
+        // Append the received value to the existing content of the textarea
+        console.log("");
+        const textarea = document.getElementById("d-array");
+        textarea.value += value.trim();
 
-          // Optional: Automatically scroll to the bottom to see new data
-          textarea.scrollTop = textarea.scrollHeight;
-
-          // Find the <li> element by its ID
-          const puckBefehlElement = document.getElementById("Puck Befehl");
-
-          // If the <li> element exists, update its content
-          if (puckBefehlElement) {
-            puckBefehlElement.innerHTML += `Puck.IR([${value.trim()}]);<br>`; // Append with <br> for a new line
-          } else {
-            console.error('Element with id "Puck Befehl" not found!');
-          }
-
-          // Add the new value to the previousValues array to prevent future duplicates
-          previousValues.push(value.trim());
-        } else {
-          console.log("Duplicate value received, not adding to the list.");
-        }
+        // Optional: Automatically scroll to the bottom to see new data
+        textarea.scrollTop = textarea.scrollHeight;
       }
       document.getElementById("connect").addEventListener("click", connectToPuck);
 
@@ -390,7 +372,7 @@ sa20b048
           // Löschfunktion ('X')
           const deleteButton = document.createElement('span');
           deleteButton.classList.add('delete');
-          deleteButton.textContent = 'X';
+          deleteButton.textContent = 'Löschen';
           deleteButton.onclick = () => {
             deleteSavedCommand(savedCommand.title, tdElement);
           };
@@ -643,6 +625,28 @@ sa20b048
         }
 
 
+      });
+      // PUCK IR (Pulszeiten) für Asterics Grid
+      document.getElementById("saveCommandBtn").addEventListener("click", function () {
+        // Get the value from the input field
+        const inputValue = document.getElementById("commandInput").value.trim();
+
+        // Check if the input is not empty
+        if (inputValue) {
+          // Create a new list item (<li>)
+          const newListItem = document.createElement("li");
+
+          // Format the value in the required format
+          newListItem.textContent = `Puck.IR([${inputValue}]);`;
+
+          // Append the new <li> to the <ul>
+          document.querySelector("ul").appendChild(newListItem);
+
+          // Optionally, reset the input field after saving the command
+          document.getElementById("commandInput").value = '';
+        } else {
+          console.log("Please enter a valid command.");
+        }
       });
 
     </script>
