@@ -233,6 +233,7 @@ sa20b048
                 console.error("Failed to disconnect from Puck.js:", error);
             }
         }
+        //
         //EventListener mit Funktion
         document.getElementById("disconnect").addEventListener("click", disconnectFromPuck);
         // Popup functionality
@@ -337,6 +338,7 @@ sa20b048
                 Puck.write(`Puck.IR([${irCommand}]);\n`);
             }
         }
+        //
         function saveNoteToCSV(functionName, deviceAddress, subdeviceAddress, functionCode) {
             // Create a CSV row with the note's data
             const csvRow = `${functionName},${deviceAddress},${subdeviceAddress},${functionCode}\n`;
