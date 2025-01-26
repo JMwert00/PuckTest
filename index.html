@@ -335,7 +335,8 @@ sa20b048
             if (commands[title]) {
                 const irCommand = commands[title].join(" ");
                 console.log("Playing command:", irCommand);
-                Puck.write(`Puck.IR([${irCommand}]);\n`);
+                Puck.write('Puck.IR([' + irCommand + ']);\n');
+
             }
         }
         //
