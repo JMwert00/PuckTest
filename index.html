@@ -29,29 +29,29 @@ sa20b048
     <label for="makeHex">&nbsp &nbsp Umwandlung in HEX:</label>
     <button id="makeHex">HEX - Kodierung</button>
   </div>
-   <!-- Popup for Saving Notes -->
-   <div class="overlay" id="overlay"></div>
-   <div id="popup">
-       <h2>Save as Note</h2>
-       <label for="colorPicker">Choose Color:</label>
-       <input type="color" id="colorPicker" value="#ffffff">
-       <br>
-       <label for="titleInput">Note Title:</label>
-       <input type="text" id="titleInput" placeholder="Enter note title">
-       <br><br>
-       <button id="confirmSave">Save</button>
-       <button id="cancelSave">Cancel</button>
-   </div>
-   <!-- Textarea for HEX und NEC Notation -->
-   <div id="hex" style="border: 1px solid #ccc; padding: 10px; min-height: 50px;">
-       <h2>Pulszeiten zu HEX</h2>
-       <br>
-       <p>Das umgewandelte Signal wird hier ausgegeben:</p>
-       <textarea id="hexOutput" placeholder="Converted HEX code will appear here..."></textarea>
-   </div>
+  <!-- Popup for Saving Notes -->
+  <div class="overlay" id="overlay"></div>
+  <div id="popup">
+    <h2>Save as Note</h2>
+    <label for="colorPicker">Choose Color:</label>
+    <input type="color" id="colorPicker" value="#ffffff">
+    <br>
+    <label for="titleInput">Note Title:</label>
+    <input type="text" id="titleInput" placeholder="Enter note title">
+    <br><br>
+    <button id="confirmSave">Save</button>
+    <button id="cancelSave">Cancel</button>
+  </div>
+  <!-- Textarea for HEX und NEC Notation -->
+  <div id="hex" style="border: 1px solid #ccc; padding: 10px; min-height: 50px;">
+    <h2>Pulszeiten zu HEX</h2>
+    <br>
+    <p>Das umgewandelte Signal wird hier ausgegeben:</p>
+    <textarea id="hexOutput" placeholder="Converted HEX code will appear here..."></textarea>
+  </div>
   <div> <!--Empfang-->
     <p3 style="text-align:left">Empfangenes Signal zum Kopieren</p3>
-    
+
   </div>
   <!-- Textarea for HEX und NEC Notation -->
 
@@ -378,7 +378,7 @@ sa20b048
     document.getElementById('makeHex').addEventListener('click', () => {
       // Input pulse times from the textarea
       const pulseTimes = document.getElementById('d-array').value.trim();
-        console.log(pulseTimes);
+      console.log(pulseTimes);
       if (!pulseTimes) {
         alert('Please enter pulse times!');
         return;
@@ -483,13 +483,17 @@ sa20b048
           const inverseDeviceAddressHex = inverseDeviceAddress.toString(16).toUpperCase().padStart(2, '0');
           const functionCodeHex = functionCode.toString(16).toUpperCase().padStart(2, '0');
           const inverseFunctionCodeHex = inverseFunctionCode.toString(16).toUpperCase().padStart(2, '0');
-
+          function hexToSignedDecimal(hex) {
+          const num = parseInt(hex, 16); // Convert hex to an integer
+          return num > 127 ? num - 256 : num; // Handle signed values (assuming 8-bit representation)
+        }
           // Format and return the NEC DSF notation
           const dsfNotation = `Device: ${deviceAddressHex} Subdevice: ${inverseDeviceAddressHex} Function: ${functionCodeHex} Inverse Function: ${inverseFunctionCodeHex}`;
           console.log(dsfNotation, "<--");
           return dsfNotation;
         }
 
+        
         function saveToList(dsfResult) {
           const listElement = document.createElement("li");
           listElement.textContent = dsfResult;
@@ -497,7 +501,7 @@ sa20b048
         }
         // Call the function to get the NEC DSF notation
         const dsf = decodeToDSF(decodedBytes);
-
+        
         // Display both the HEX code and the DSF formatted result inside the textarea
         const combinedResult = `
                     HEX: ${hexArray.join(' ')}
