@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- 
+PUCK IR Fernbedienung Projekt
+MATOUSEK Jan
+sa20b048
+-->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IR-Fernbedienung</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #csv {
+            width: auto;
+            border: 3px solid black;
+            padding-left: 1px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .note {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 1px 1px 4px 1px #ccc;
+        }
+
+        .note h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .note p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        #bt {
+            width: auto;
+            border: 3px solid black;
+            padding-left: 1px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Infrarot Fernbedienung </h1>
+    <p1> &nbsp &nbsp Mit Puck Verbinden &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp Verbindung Trennen</p1>
+    <br>
+    <button id="connect">Connect to Puck.js</button>
+    <p1>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp</p1>
+    <button id="disconnect"> Trennen</button>
+    <!-- Textarea for Received Pulse Times -->
+    <div id="bt">
+        <p1>v Hier erscheint ein empfangenes IR-Signal v </p1> <br>
+        <textarea id="pulseTimes" placeholder="Pulse times will appear here..."></textarea> <br>
+        <label>IR Signal abspeichern:</label>
+        <button id="saveNote">Save as Note</button>
+        <label>&nbsp &nbsp Umwandlung in HEX:</label>
+        <button id="makeHex">HEX - Kodierung</button>
+        <label>&nbsp &nbsp Abspeichern als csv Datei</label>
+        <button id="csv">Download as CSV</button>
+    </div>
+
+    <!-- Popup for Saving Notes -->
+    <div class="overlay" id="overlay"></div>
+    <div id="popup">
+        <h2>Save as Note</h2>
+        <label for="colorPicker">Choose Color:</label>
+        <input type="color" id="colorPicker" value="#ffffff">
+        <br>
+        <label for="titleInput">Note Title:</label>
+        <input type="text" id="titleInput" placeholder="Enter note title">
+        <br><br>
+        <button id="confirmSave">Save</button>
+        <button id="cancelSave">Cancel</button>
+    </div>
+    <!-- Textarea for HEX und NEC Notation -->
+    <div id="hex" style="border: 1px solid #ccc; padding: 10px; min-height: 50px;">
+        <h2>Pulszeiten zu HEX</h2>
+        <br>
+        <p>Das umgewandelte Signal wird hier ausgegeben:</p>
+        <textarea id="hexOutput" placeholder="Converted HEX code will appear here..."></textarea>
+    </div>
+
+    <div id="csv">
+        <h2> -- Vorschau CSV -- </h2>
+        <br>
+        <p1>Hier wird das fertige CSV Dokument angezeigt</p1>
+        <div>
+            <label for="functionName">Functionname:</label>
+            <input type="text" id="functionName" placeholder="Enter function name" required><br><br>
+
+            <label for="device">Device:</label>
+            <input type="text" id="device" placeholder="Enter device" required><br><br>
+
+            <label for="subdevice">Subdevice:</label>
+            <input type="text" id="subdevice" placeholder="Enter subdevice" required><br><br>
+
+            <label for="function">Function:</label>
+            <input type="text" id="function" placeholder="Enter function" required><br><br>
+
+            <button onclick="addItem()">Add to List</button>
+            <button onclick="exportCSV()">Export as CSV</button>
+        </div>
+
+        <h2>List:</h2>
+        <ul id="itemList"></ul>
+    </div>
+
+    <!-- Notes Section -->
+    <div id="notesContainer"></div>
+
+    <script>
+        // Variables for BLE Connection
+        let puckDevice = null;
+        let gattServer = null;
+        let rxCharacteristic = null;
+
+        // Notes and Commands
+        let notes = [];
+        let commands = {};
+
+        // BLE Connection
+        async function connectToPuck() {
+            try {
+                puckDevice = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e']
+                });
+
+                gattServer = await puckDevice.gatt.connect();
+                const service = await gattServer.getPrimaryService('6e400001-b5a3-f393-e0a9-e50e24dcca9e');
+                rxCharacteristic = await service.getCharacteristic('6e400003-b5a3-f393-e0a9-e50e24dcca9e');
+
+                rxCharacteristic.addEventListener('characteristicvaluechanged', handleNotifications);
+                await rxCharacteristic.startNotifications();
+
+                console.log("Connected to Puck.js and notifications started.");
+            } catch (error) {
+                console.error("Failed to connect to Puck.js:", error);
+            }
+        }
+
+        function handleNotifications(event) {
+            const value = new TextDecoder().decode(event.target.value).trim();
+            const textarea = document.getElementById("pulseTimes");
+            textarea.value += value + "\n"; // Append new pulse times
+            textarea.scrollTop = textarea.scrollHeight; // Auto-scroll to the bottom
+        }
+
+        document.getElementById("connect").addEventListener("click", connectToPuck);
+        //
+        //Verbindung trennen
+        async function disconnectFromPuck() {
+            try {
+                if (!puckDevice) {
+                    console.log("No device connected.");
+                    return;
+                }
+
+                if (rxCharacteristic) {
+                    console.log("Stopping notifications...");
+                    await rxCharacteristic.stopNotifications();
+                    rxCharacteristic.removeEventListener('characteristicvaluechanged', handleNotifications);
+                    console.log("Notifications stopped.");
+                }
+
+                if (gattServer && gattServer.connected) {
+                    console.log("Disconnecting from GATT server...");
+                    gattServer.disconnect();
+                    console.log("Disconnected from GATT server.");
+                } else {
+                    console.log("GATT server is not connected.");
+                }
+
+                // Clear references to ensure the device can be reconnected
+                puckDevice = null;
+                gattServer = null;
+                txCharacteristic = null;
+                rxCharacteristic = null;
+
+                console.log("Puck.js disconnected and cleaned up.");
+            } catch (error) {
+                console.error("Failed to disconnect from Puck.js:", error);
+            }
+        }
+        //EventListener mit Funktion
+        document.getElementById("disconnect").addEventListener("click", disconnectFromPuck);
+        // Popup functionality
+        const popup = document.getElementById("popup");
+        const overlay = document.getElementById("overlay");
+        const saveNoteButton = document.getElementById("saveNote");
+        const confirmSaveButton = document.getElementById("confirmSave");
+        const cancelSaveButton = document.getElementById("cancelSave");
+
+        saveNoteButton.addEventListener("click", () => {
+            popup.style.display = "block";
+            overlay.style.display = "block";
+        });
+
+        confirmSaveButton.addEventListener("click", () => {
+            const color = document.getElementById("colorPicker").value;
+            const title = document.getElementById("titleInput").value.trim();
+            const content = document.getElementById("pulseTimes").value.trim();
+
+            if (!title || !content) {
+                alert("Please provide a title and pulse times.");
+                return;
+            }
+
+            notes.push({ color, title, text: content });
+            commands[title] = content.split("\n");
+
+            saveNotes();
+            renderNotes();
+
+            popup.style.display = "none";
+            overlay.style.display = "none";
+        });
+
+        cancelSaveButton.addEventListener("click", () => {
+            popup.style.display = "none";
+            overlay.style.display = "none";
+        });
+        // Pulszeiten Aufzeichnung Abspeicherung und Wiedergabe
+        // Save and Load Notes
+        function saveNotes() {
+            localStorage.setItem("notes", JSON.stringify(notes));
+            localStorage.setItem("commands", JSON.stringify(commands));
+        }
+
+        function loadNotes() {
+            notes = JSON.parse(localStorage.getItem("notes")) || [];
+            commands = JSON.parse(localStorage.getItem("commands")) || {};
+            renderNotes();
+        }
+
+        function renderNotes() {
+            const notesContainer = document.getElementById("notesContainer");
+            notesContainer.innerHTML = "";
+            notes.forEach((note, index) => {
+                const noteElement = document.createElement("div");
+                noteElement.style.backgroundColor = note.color;
+                noteElement.classList.add("note");
+
+                const titleElement = document.createElement("h2");
+                titleElement.textContent = note.title;
+
+                const contentElement = document.createElement("p");
+                contentElement.textContent = note.text;
+                //
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Delete";
+                deleteButton.addEventListener("click", () => deleteNote(index));
+                //
+                const playButton = document.createElement("button");
+                playButton.textContent = "Play";
+                playButton.addEventListener("click", () => playCommand(note.title));
+                //
+                //
+                const csvButton = document.createElement("button");
+                csvButton.textContent = "CSV";
+                csvButton.addEventListener("click", () => {
+                    const functionName = note.title;  // Use note.title or any other attribute for the function name
+                    const deviceAddress = note.deviceAddress;  // Assume your note object has this data
+                    const subdeviceAddress = note.subdeviceAddress;
+                    const functionCode = note.functionCode;
+
+                    // Call saveNoteToCSV with the data from the note
+                    saveNoteToCSV(functionName, deviceAddress, subdeviceAddress, functionCode);
+                });
+                //
+                noteElement.append(titleElement, contentElement, playButton, deleteButton, csvButton);
+                notesContainer.appendChild(noteElement);
+            });
+        }
+
+        function deleteNote(index) {
+            notes.splice(index, 1);
+            saveNotes();
+            renderNotes();
+        }
+
+        function playCommand(title) {
+            if (commands[title]) {
+                const irCommand = commands[title].join(" ");
+                console.log("Playing command:", irCommand);
+                Puck.write(`Puck.IR([${irCommand}]);\n`);
+            }
+        }
+        function saveNoteToCSV(functionName, deviceAddress, subdeviceAddress, functionCode) {
+            // Create a CSV row with the note's data
+            const csvRow = `${functionName},${deviceAddress},${subdeviceAddress},${functionCode}\n`;
+
+            // Append the row to the CSV content
+            let csvContent = localStorage.getItem("csvData") || "";  // Get existing CSV data from localStorage
+            csvContent += csvRow;  // Append the new row
+
+            // Save the updated CSV content back to localStorage
+            localStorage.setItem("csvData", csvContent);
+
+            // Optionally, trigger a file download (uncomment below to enable it)
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const link = document.createElement("a");
+            link.download = "notes.csv";  // Name of the downloaded file
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        }
+
+        // Initialize
+        window.onload = loadNotes;
+        //
+        //IR-Pulszeiten zu HEX konvertieren
+        // Convert pulse times to HEX when the HEX button is clicked
+        document.getElementById('makeHex').addEventListener('click', () => {
+            // Input pulse times from the textarea
+            const pulseTimes = document.getElementById('pulseTimes').value.trim();
+
+            if (!pulseTimes) {
+                alert('Please enter pulse times!');
+                return;
+            }
+
+            try {
+                // Define the NEC protocol thresholds
+                const pulse_width_leader = [9.0, 13.5];  // ms, approximate for the leader signal pulse
+                const space_width_leader = [4.0, 5.0];  // ms, approximate for the leader signal space
+                const pulse_width_short = [0.4, 1.0];   // ms, for logical 0 or 1 pulses
+                const space_width_0 = [0.4, 1.0];       // ms, for logical 0 space
+                const space_width_1 = [1.5, 2.0];       // ms, for logical 1 space
+
+                // Parse pulse times into an array
+                const pulseArray = pulseTimes.split(',').map(value => parseFloat(value.trim()));
+
+                // Helper function to categorize pulses
+                function categorizePulseSequence(pulse_times) {
+                    const bits = [];
+                    let leaderDetected = false;
+                    let i = 0;
+
+                    while (i < pulse_times.length) {
+                        const pulse = pulse_times[i];
+                        const space = i + 1 < pulse_times.length ? pulse_times[i + 1] : null;
+
+                        // Detect leader signal
+                        if (pulse >= pulse_width_leader[0] && pulse <= pulse_width_leader[1] &&
+                            space >= space_width_leader[0] && space <= space_width_leader[1]) {
+                            leaderDetected = true;
+                            i += 2;  // Skip leader pulse and space
+                            continue;
+                        }
+
+                        // Detect logical 0 or 1
+                        if (pulse >= pulse_width_short[0] && pulse <= pulse_width_short[1]) {
+                            if (space >= space_width_0[0] && space <= space_width_0[1]) {
+                                bits.push(0);  // Logical 0
+                            } else if (space >= space_width_1[0] && space <= space_width_1[1]) {
+                                bits.push(1);  // Logical 1
+                            }
+                        }
+
+                        i += 2;  // Move to next pulse-space pair
+                    }
+
+                    return [leaderDetected, bits];
+                }
+
+                // Decode the pulse sequence
+                const [leaderDetected, bits] = categorizePulseSequence(pulseArray);
+
+                // Convert bits to bytes
+                function bitsToBytes(bits) {
+                    const bytesArray = [];
+                    for (let i = 0; i < bits.length; i += 8) {
+                        const byte = bits.slice(i, i + 8);
+                        let byteValue = 0;
+                        for (let j = 0; j < byte.length; j++) {
+                            byteValue += byte[j] << (7 - j);
+                        }
+                        bytesArray.push(byteValue);
+                    }
+                    return bytesArray;
+                }
+
+                const decodedBytes = bitsToBytes(bits);
+
+                // Convert bytes to HEX format
+                const hexArray = decodedBytes.map(byte => byte.toString(16).toUpperCase().padStart(2, '0'));
+
+                // Now, use the helper function to group the bytes into the DSF format
+                function decodeToDSF(decodedBytes) {
+                    // Ensure the input array has the expected length (8 bytes for NEC protocol)
+                    if (decodedBytes.length !== 8) {
+                        console.error("Invalid number of decoded bytes. Expected 8 bytes.");
+                        return;
+                    }
+
+                    // Extract the relevant sections of the byte array (NEC protocol)
+                    const deviceAddress = decodedBytes[0];
+                    const inverseDeviceAddress = decodedBytes[1];
+                    const functionCode = decodedBytes[2];
+                    const inverseFunctionCode = decodedBytes[3];
+
+                    // Convert each value to hexadecimal format (2 digits with uppercase letters)
+                    const deviceAddressHex = deviceAddress.toString(16).toUpperCase().padStart(2, '0');
+                    const inverseDeviceAddressHex = inverseDeviceAddress.toString(16).toUpperCase().padStart(2, '0');
+                    const functionCodeHex = functionCode.toString(16).toUpperCase().padStart(2, '0');
+                    const inverseFunctionCodeHex = inverseFunctionCode.toString(16).toUpperCase().padStart(2, '0');
+
+                    // Format and return the NEC DSF notation
+                    const dsfNotation = `Device: ${deviceAddressHex} Subdevice: ${inverseDeviceAddressHex} Function: ${functionCodeHex} Inverse Function: ${inverseFunctionCodeHex}`;
+                    return dsfNotation;
+
+                }
+
+                function saveToList(dsfResult) {
+                    const listElement = document.createElement("li");
+                    listElement.textContent = dsfResult;
+                    document.getElementById("resultList").appendChild(listElement);
+                }
+                // Call the function to get the NEC DSF notation
+                const dsf = decodeToDSF(decodedBytes);
+
+                // Display both the HEX code and the DSF formatted result inside the textarea
+                const combinedResult = `
+                    HEX: ${hexArray.join(' ')}
+                    DSF: ${dsf}
+                    
+                `;
+
+                document.getElementById('hexOutput').value = combinedResult || 'No result.';
+
+                console.log(`Leader detected: ${leaderDetected}`);
+                console.log(`Decoded Bytes: ${decodedBytes}`);
+                console.log(`HEX: ${hexArray.join(' ')}`);
+                console.log(`DSF: ${dsf}`);
+                document.getElementById(notesContainer)
+            } catch (error) {
+                alert(error.message); // Handle errors gracefully
+            }
+            //NEU CSV und LISTE
+            function saveToListAndCSV() {
+                // Get the content of the textarea
+                const textareaContent = document.getElementById("hexOutput").value;
+
+                // Regular expressions to extract the hex values for Device, Subdevice, and Function
+                const deviceMatch = textareaContent.match(/Device:\s*([0-9A-Fa-f]{2})/);
+                const subdeviceMatch = textareaContent.match(/Subdevice:\s*([0-9A-Fa-f]{2})/);
+                const functionMatch = textareaContent.match(/Function:\s*([0-9A-Fa-f]{2})/);
+
+                if (deviceMatch && subdeviceMatch && functionMatch) {
+                    // Extract hex values
+                    const deviceHex = deviceMatch[1];
+                    const subdeviceHex = subdeviceMatch[1];
+                    const functionHex = functionMatch[1];
+
+                    // Convert hex values to decimal
+                    const deviceDecimal = parseInt(deviceHex, 16);
+                    const subdeviceDecimal = parseInt(subdeviceHex, 16);
+                    const functionDecimal = parseInt(functionHex, 16);
+
+                    // Format the output for the list
+                    const listText = `Device: ${deviceDecimal} Subdevice: ${subdeviceDecimal} Function: ${functionDecimal}`;
+
+                    // Create a new <li> element and set its content
+                    const listElement = document.createElement("li");
+                    listElement.textContent = listText;
+
+                    // Append the new <li> to the list with id="resultList"
+                    document.getElementById("resultList").appendChild(listElement);
+
+                    // Prepare the data to save to the CSV
+                    const csvContent = `${deviceDecimal},${subdeviceDecimal},${functionDecimal}\n`;
+
+                    // Save the data to the CSV file
+                    saveToCSV(csvContent);
+                } else {
+                    alert("Could not find valid Device, Subdevice, or Function values to parse.");
+                }
+            }
+
+            // Function to save data to a CSV file
+            function saveToCSV(data) {
+                // Create a Blob object with the CSV data
+                const blob = new Blob([data], { type: "text/csv" });
+
+                // Create a temporary link to download the file
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "output.csv";
+
+                // Programmatically click the link to trigger the download
+                link.click();
+
+                // Clean up the temporary link
+                URL.revokeObjectURL(link.href);
+            }
+
+
+        });
+
+    </script>
+    <script>
+
+                // Array to store list items
+                let itemList = [];
+
+// Function to add an item to the list
+function addItem() {
+    // Get input values
+    const functionName = document.getElementById("functionName").value.trim();
+    const device = document.getElementById("device").value.trim();
+    const subdevice = document.getElementById("subdevice").value.trim();
+    const func = document.getElementById("function").value.trim();
+
+    // Validate inputs
+    if (!functionName || !device || !subdevice || !func) {
+        alert("Please fill out all fields.");
+        return;
+    }
+
+    // Create an item object
+    const item = {
+        functionName,
+        protocol: "NEC", // Default protocol
+        device,
+        subdevice,
+        func,
+    };
+
+    // Add item to the list
+    itemList.push(item);
+
+    // Save to local storage
+    localStorage.setItem("functionList", JSON.stringify(itemList));
+
+    // Update the displayed list
+    updateList();
+}
+
+// Function to update the displayed list
+function updateList() {
+    const listContainer = document.getElementById("itemList");
+    listContainer.innerHTML = ""; // Clear the list
+
+    itemList.forEach((item, index) => {
+        // Create list item element
+        const listItem = document.createElement("li");
+        listItem.textContent = `${item.functionName}, ${item.protocol}, ${item.device}, ${item.subdevice}, ${item.func}`;
+
+        // Create delete button
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.style.marginLeft = "10px";
+        deleteButton.onclick = () => deleteItem(index);
+
+        // Append elements to the list item
+        listItem.appendChild(deleteButton);
+        listContainer.appendChild(listItem);
+    });
+}
+
+// Function to delete an item
+function deleteItem(index) {
+    itemList.splice(index, 1); // Remove item from array
+
+    // Update local storage
+    localStorage.setItem("functionList", JSON.stringify(itemList));
+
+    // Update the displayed list
+    updateList();
+}
+
+// Function to export the list as a CSV
+function exportCSV() {
+    if (itemList.length === 0) {
+        alert("No items to export.");
+        return;
+    }
+
+    // Prepare CSV content
+    let csvContent = "functionname,protocol,device,subdevice,function\n"; // CSV header
+    itemList.forEach((item) => {
+        csvContent += `${item.functionName},${item.protocol},${item.device},${item.subdevice},${item.func}\n`;
+    });
+
+    // Create a Blob and download the file
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "function_list.csv";
+    link.click();
+}
+
+// Load list from local storage on page load
+window.onload = function () {
+    const savedList = localStorage.getItem("functionList");
+    if (savedList) {
+        itemList = JSON.parse(savedList);
+        updateList();
+    }
+};
+    </script>
+    <script src="https://www.puck-js.com/puck.js"></script>
+
+</body>
+
+</html>
