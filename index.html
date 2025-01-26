@@ -53,10 +53,10 @@ sa20b048
   <div> <!--Empfang-->
     <p3 style="text-align:left">Empfangenes Signal zum Kopieren</p3>
     <ul>
-    <li id="Puck Befehl">
+      <li id="Puck Befehl">
 
-    </li>
-  </ul>
+      </li>
+    </ul>
   </div>
   <!-- Textarea for HEX und NEC Notation -->
 
@@ -87,7 +87,7 @@ sa20b048
   </div>
   <!-- Notes Section-->
   <div id="notesContainer"></div>
-  <div id="app"> 
+  <div id="app">
     <div>
       <h1>Neues IR-Signal abspeichern</h1>
       <input type="color" id="colorPicker" value="#ffffff">
@@ -204,27 +204,36 @@ sa20b048
         overlay.style.display = "none";
       });
 
-
+      let previousValues = [];
       function handleNotifications(event) {
+        // Decode the received data
         const value = new TextDecoder().decode(event.target.value);
         console.log("Received data:", value);
 
-        // Append the received value to the existing content of the textarea
-        console.log("");
-        const textarea = document.getElementById("d-array");
-        textarea.value += value.trim();
+        // Check if the value already exists in previousValues to avoid duplication
+        if (!previousValues.includes(value.trim())) {
+          // Append the received value to the existing content of the textarea
+          const textarea = document.getElementById("d-array");
+          textarea.value += value.trim() + "\n"; // Add a newline for separation
 
-        // Optional: Automatically scroll to the bottom to see new data
-        textarea.scrollTop = textarea.scrollHeight;
-        //Puck.IR(value) um den Befehl für asterics grid zu kopieren
-        const puckBefehlElement = document.getElementById("Puck Befehl");
-  
-  // If the <li> element exists, update its content
-  if (puckBefehlElement) {
-    puckBefehlElement.textContent += `Puck.IR([${value.trim()}]);\n`; // Append the value in the desired format
-  } else {
-    console.error('Element with id "Puck Befehl" not found!');
-  }
+          // Optional: Automatically scroll to the bottom to see new data
+          textarea.scrollTop = textarea.scrollHeight;
+
+          // Find the <li> element by its ID
+          const puckBefehlElement = document.getElementById("Puck Befehl");
+
+          // If the <li> element exists, update its content
+          if (puckBefehlElement) {
+            puckBefehlElement.innerHTML += `Puck.IR([${value.trim()}]);<br>`; // Append with <br> for a new line
+          } else {
+            console.error('Element with id "Puck Befehl" not found!');
+          }
+
+          // Add the new value to the previousValues array to prevent future duplicates
+          previousValues.push(value.trim());
+        } else {
+          console.log("Duplicate value received, not adding to the list.");
+        }
       }
       document.getElementById("connect").addEventListener("click", connectToPuck);
 
@@ -252,9 +261,9 @@ sa20b048
         localStorage.setItem('notes', JSON.stringify(notes));
         localStorage.setItem('commands', JSON.stringify(commands));
         const contentInput = document.getElementById('contentInput');
-  
-  // Update its value with the commands
-  contentInput.value = JSON.stringify(commands, null, 2); // Pretty-print the JSON for readability
+
+        // Update its value with the commands
+        contentInput.value = JSON.stringify(commands, null, 2); // Pretty-print the JSON for readability
         console.log(commands);
       }
       function renderNotes() {
