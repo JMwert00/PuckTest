@@ -483,10 +483,7 @@ sa20b048
           const inverseDeviceAddressHex = inverseDeviceAddress.toString(16).toUpperCase().padStart(2, '0');
           const functionCodeHex = functionCode.toString(16).toUpperCase().padStart(2, '0');
           const inverseFunctionCodeHex = inverseFunctionCode.toString(16).toUpperCase().padStart(2, '0');
-          function hexToSignedDecimal(hex) {
-          const num = parseInt(hex, 16); // Convert hex to an integer
-          return num > 127 ? num - 256 : num; // Handle signed values (assuming 8-bit representation)
-        }
+ 
           // Format and return the NEC DSF notation
           const dsfNotation = `Device: ${deviceAddressHex} Subdevice: ${inverseDeviceAddressHex} Function: ${functionCodeHex} Inverse Function: ${inverseFunctionCodeHex}`;
           console.log(dsfNotation, "<--");
