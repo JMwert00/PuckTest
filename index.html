@@ -52,7 +52,11 @@ sa20b048
   </div>
   <div> <!--Empfang-->
     <p3 style="text-align:left">Empfangenes Signal zum Kopieren</p3>
+    <ul>
+    <li id="Puck Befehl">
 
+    </li>
+  </ul>
   </div>
   <!-- Textarea for HEX und NEC Notation -->
 
@@ -212,6 +216,15 @@ sa20b048
 
         // Optional: Automatically scroll to the bottom to see new data
         textarea.scrollTop = textarea.scrollHeight;
+        //Puck.IR(value) um den Befehl für asterics grid zu kopieren
+        const puckBefehlElement = document.getElementById("Puck Befehl");
+  
+  // If the <li> element exists, update its content
+  if (puckBefehlElement) {
+    puckBefehlElement.textContent += `Puck.IR([${value.trim()}]);\n`; // Append the value in the desired format
+  } else {
+    console.error('Element with id "Puck Befehl" not found!');
+  }
       }
       document.getElementById("connect").addEventListener("click", connectToPuck);
 
@@ -238,6 +251,11 @@ sa20b048
       function saveNotes() {
         localStorage.setItem('notes', JSON.stringify(notes));
         localStorage.setItem('commands', JSON.stringify(commands));
+        const contentInput = document.getElementById('contentInput');
+  
+  // Update its value with the commands
+  contentInput.value = JSON.stringify(commands, null, 2); // Pretty-print the JSON for readability
+        console.log(commands);
       }
       function renderNotes() {
         const notesContainer = document.getElementById('notesContainer');
